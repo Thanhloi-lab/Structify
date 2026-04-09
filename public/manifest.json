@@ -1,0 +1,68 @@
+{
+  "manifest_version": 3,
+  "name": "Trulioo Extension",
+  "version": "1.0.1",
+  "description": "An extension built with React to work for Trulioo",
+  "minimum_chrome_version": "114",
+  "action": {
+    "default_icon": {
+      "128": "assets/icon128.png",
+      "48": "assets/icon48.png"
+    },
+    "default_popup": "index.html",
+    "default_title": "Open Trulioo Side Panel"
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "storage",
+    "sidePanel",
+    "webNavigation",
+    "debugger",
+    "windows",
+    "clipboardWrite"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "icons": {
+    "128": "assets/icon128.png",
+    "48": "assets/icon48.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+      "*://*.localhost/*",
+      "*://*.example/*",
+      "*://*.trulioo.com/*",
+      "*://*.jsdelivr.net/*",
+      "*://*.atlassian.net/*",
+      "https://127.0.0.1/*",
+      "http://127.0.0.1/*"
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dialog.html",
+        "inpage-hook.js",
+        "dialog.js",
+        "assets/icon128.png",
+        "assets/icon48.png"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

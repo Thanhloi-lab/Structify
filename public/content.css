@@ -1,0 +1,25 @@
+.list-table tr.even:hover td {
+  background-color: #eef389 !important;
+}
+
+.list-table tr.odd:hover td {
+  background-color: #eef389 !important;
+}
+
+#datasource-status-table thead>tr {
+  position: sticky;
+  top: -11px;
+  z-index: 999;
+}
+
+#datasource-status-table thead>tr>th {
+  background-color: antiquewhite;
+}
+
+.datasource-status.list-container.scroll-container{
+  padding: 10px 0px !important;
+}
+
+.highlight-col {
+  background-color: #eef389 !important;
+}
