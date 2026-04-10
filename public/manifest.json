@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Trulioo Extension",
-  "version": "1.0.1",
-  "description": "An extension built with React to work for Trulioo",
+  "name": "Structify",
+  "version": "1.0.0",
+  "description": "An extension built with React to structure data",
   "minimum_chrome_version": "114",
   "action": {
     "default_icon": {
@@ -10,7 +10,7 @@
       "48": "assets/icon48.png"
     },
     "default_popup": "index.html",
-    "default_title": "Open Trulioo Side Panel"
+    "default_title": "Open side panel"
   },
   "side_panel": {
     "default_path": "index.html"
@@ -30,15 +30,31 @@
     "windows",
     "clipboardWrite"
   ],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "icons": {
     "128": "assets/icon128.png",
-    "48": "assets/icon48.png"
+    "48": "assets/icon48.png",
+    "192": "assets/icon192.png"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://chatgpt.com/*"
+      ],
+      "js": [
+        "hiddingChatGPTSection.js"
+      ],
       "run_at": "document_start"
     }
   ],
@@ -57,12 +73,13 @@
     {
       "resources": [
         "dialog.html",
-        "inpage-hook.js",
         "dialog.js",
-        "assets/icon128.png",
-        "assets/icon48.png"
+        "assets/icon192.png",
+        "assets/*"
       ],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

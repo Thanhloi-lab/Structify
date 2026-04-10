@@ -1,107 +1,12 @@
 /* global chrome */
-/* global globalThis */
-import { fillData } from "../utils/autoFillData.js";
-import { captureEvidence } from "../utils/captureEvidence.js";
-import { addToggleCodeBlockButton } from "../utils/confluenceHelper.js";
-import { goToDebug, pasteToCP, addBusinessSearchButton } from "../utils/customerPortalHelper.js";
-import { getDataSourceInformation, getMigrationScript, getNewUIDataSourceInformation, getUpdateScript } from '../utils/datasourceScripting.js';
 import { checkValidSelectedTextType, handleSelectionChange, tryShowFloatingButton } from '../utils/floatingButton.js';
 import { getSettings, onSettingsChanged } from "../utils/setting.js";
-import { removeSpace } from "../utils/stringHelper.js";
 import { showToast } from "../utils/toast.js";
-import { compareVariants, getAdminPortalVariant, isValidVariantArray } from '../utils/variantUtilities.js';
+import { logo192 } from '../../assets/base64Icon.js'
 
 chrome.runtime.onMessage.addListener(async (message, _, sendResponse) => {
-  if (message.type === 'get-html' || message.type?.includes('script')) {
-    try {
-      var dataSourceInformation = getDataSourceInformation();
-      var datasourceName = dataSourceInformation?.general != null ?
-        removeSpace(dataSourceInformation?.general?.find(x => x.key.includes('datasourcename'))?.value)?.replace(/[^a-zA-Z0-9]/g, '') : null;
-
-      if (!datasourceName) {
-        dataSourceInformation = getNewUIDataSourceInformation();
-        datasourceName = dataSourceInformation?.general != null ?
-          removeSpace(dataSourceInformation.general.find(x => x.key.includes('datasourcename'))?.value)?.replace(/[^a-zA-Z0-9]/g, '') : null;
-      }
-
-      if (!datasourceName) {
-        const errorMsg = "Cannot extract valid Datasource Information. Please ensure you are on a supported Trulioo Confluence page.";
-        showToast(errorMsg, "error");
-        sendResponse({ errorMsg });
-        return;
-      }
-
-      if (message.type === 'get-html') {
-        sendResponse({ datasourceName });
-      }
-      else {
-        datasourceName = message.datasourceName ?? datasourceName;
-        if (message.type === 'get-migration-script') {
-          var migrationScript = getMigrationScript(datasourceName, dataSourceInformation);
-          sendResponse({ script: migrationScript });
-        }
-        else if (message.type.includes('get-update-script')) {
-          let commandType = message.type.split('get-update-script_');
-          if (commandType.length === 2) {
-            var options = commandType[1].split('/');
-            var updateScript = getUpdateScript(datasourceName, options, dataSourceInformation);
-            sendResponse({ script: updateScript });
-          }
-        }
-      }
-    }
-    catch (err) {
-      console.error("[Extension Content Script Error]", err);
-      showToast(err.message || "Cannot get source content", "error");
-      sendResponse({ errorMsg: err.message || "Cannot get source content" });
-    }
-  }
-  else if (message.type === 'ping') {
+  if (message.type === 'ping') {
     sendResponse("pong");
-  }
-  else if (message.action === 'FillData') {
-    fillData();
-    sendResponse();
-    return true;
-  }
-  else if (message.action === "pasteToCP") {
-    await pasteToCP();
-    sendResponse();
-    return;
-  }
-  else if (message.action === "captureEvidence") {
-    captureEvidence();
-    sendResponse();
-    return true;
-  }
-  else if (message.action === 'CopyAdminVariant') {
-    let variant = getAdminPortalVariant();
-    if (variant && variant.length > 0) {
-      await navigator.clipboard.writeText(JSON.stringify(variant, null, 2));
-    }
-    sendResponse();
-    return true;
-  }
-  else if (message.action === 'CompareVariant') {
-    let text = await navigator.clipboard.readText();
-    let variant;
-    try {
-      variant = JSON.parse(text);
-    } catch (e) {
-      showToast("Data in Clipboard is not valid", "Error");
-      return;
-    }
-
-    if (variant && variant.length > 0 && isValidVariantArray(variant)) {
-      compareVariants(-1, variant);
-    }
-
-    return;
-  }
-  else if (message.action === 'ShowToggleBtn') {
-    addToggleCodeBlockButton();
-    sendResponse();
-    return true;
   }
   sendResponse({ errorMsg: "No command" });
 });
@@ -110,213 +15,29 @@ document.addEventListener('selectionchange', handleSelectionChange);
 
 document.addEventListener('keydown', async (e) => {
   const setting = globalThis.ExtensionSettings;
+  const currentHost = window.location.hostname;
 
   if (e.key === 'Control' && checkValidSelectedTextType() && (setting?.beautifyCode || setting?.toCSharp)) {
     tryShowFloatingButton();
   }
-  else if (e.key === 'F1') {
+  if (e.key === 'F4' && setting?.allowChatGPTOptimize && currentHost?.toLowerCase() === "chatgpt.com") {
     e.preventDefault();
-    const btn = document.getElementById('mainDebugButton');
-    btn.click();
-  }
-  else if (e.key === "F4" && setting?.copyEvidence && (document.location.href.includes("GDCDebug/DebugRecordTransaction") || document.location.href.includes("verification"))) {
-    e.preventDefault();
-    captureEvidence();
-  }
-  else if (setting?.fillData && document.location.href.includes("/verification")) {
-    if (e.key === "F6") {
-      e.preventDefault();
-      fillData();
-    }
-    else if (e.key === "F7") {
-      e.preventDefault();
-      await pasteToCP();
-    }
+    const result = globalThis.HiddingChatGPTSection.toggle();
+    showToast(`ChatGPT optimizer ${result}`);
   }
 });
-
-// document.addEventListener("DOMContentLoaded", async () => {
-//   (async () => {
-//     globalThis.ExtensionSettings = await getSettings();
-//     onSettingsChanged((next) => {
-//       globalThis.ExtensionSettings = next;
-//     });
-//   })();
-
-//   var microFrontEndRoot = document.querySelector('#micro-frontend-root')
-
-//   var usButton = document.createElement("button");
-//   usButton.id = "mainDebugButton";
-//   usButton.type = "button";
-//   usButton.className = "btn btn-primary";
-//   usButton.textContent = "Debug (F1)";
-//   usButton.style.alignItems = "center";
-//   usButton.style.height = "30px";
-//   usButton.style.padding = "0px 10px";
-//   usButton.onclick = async function (event) {
-//     var urlParams = new URLSearchParams(window.location.search);
-//     var transactionRecordID = null;
-
-//     if (microFrontEndRoot) {
-//       transactionRecordID = [...document.querySelectorAll("#WideTransactionDetails li")]
-//         .find(li => normalize(li.textContent).includes("transactionid"))
-//         ?.querySelector("span:last-child")
-//         ?.textContent ?? urlParams.get("transactionRecordId");
-//     }
-//     else {
-//       transactionRecordID =
-//         document.getElementsByClassName("file-icon")[0]?.parentNode?.textContent?.trim() ??
-//         document.getElementsByClassName("value fs-exclude")[5]?.innerText ??
-//         urlParams.get("transactionRecordId");
-//     }
-
-//     if (transactionRecordID) {
-//       goToDebug(transactionRecordID, event.ctrlKey);
-//       await navigator.clipboard.writeText(transactionRecordID);
-//     }
-//   };
-
-//   if (microFrontEndRoot) {
-//     microFrontEndRoot.appendChild(usButton);
-//   }
-
-//   else {
-//     var supportLink = document.querySelector(
-//       ".atlas-box.atlas-get-support-box.help a"
-//     );
-
-//     if (supportLink) {
-//       supportLink.parentNode?.replaceChild(usButton, supportLink);
-//     }
-//     else {
-//       supportLink = document.querySelector(
-//         "#main-content-div > div.d-print-none.atlas_nav_menu > div > div"
-//       );
-//       if (supportLink?.innerText?.toLowerCase() === 'verification' || supportLink?.innerText?.toLowerCase() === 'run a verification') {
-//         supportLink.insertAdjacentElement("beforeend", usButton);
-//       }
-//       else {
-//         supportLink = document.querySelector('.pageHeaderText')
-//         if (supportLink?.innerText?.toLowerCase() === 'verification' || supportLink?.innerText?.toLowerCase() === 'run a verification') {
-//           supportLink.insertAdjacentElement("beforeend", usButton);
-//         }
-//         else if (document.location.href.includes("businesssearch")) {
-//           supportLink = document.querySelector(".d-print-none.atlas_nav_menu .atlas-page-header-container .atlas-page-title");
-//           if (supportLink) {
-//             supportLink?.insertAdjacentElement("beforeend", usButton);
-//             usButton.onclick = async function (event) {
-//               var transactionRecordID = supportLink.dataset.x;
-
-//               if (transactionRecordID) {
-//                 goToDebug(transactionRecordID, event.ctrlKey);
-//                 await navigator.clipboard.writeText(transactionRecordID);
-//               }
-//             };
-//           }
-//         }
-//       }
-//     }
-//   }
-
-//   var target = document.getElementsByClassName("transaction-page")[0];
-//   if (target) {
-//     const observer = new MutationObserver((_) => {
-//       var resultsTable = document.querySelector(
-//         "#content > div > div.section.search-results > table"
-//       );
-//       if (resultsTable)
-//         for (let row of resultsTable.rows) {
-//           if (row.rowIndex === 0) continue;
-//           var button = document.createElement("button");
-//           button.type = "button";
-//           button.className = "btn btn-primary";
-//           button.textContent = "Debug";
-//           button.onclick = async function (event) {
-//             var transactionRecordID = row.cells[4].firstChild.textContent;
-//             if (transactionRecordID) {
-//               goToDebug(transactionRecordID, event.ctrlKey);
-//               await navigator.clipboard.writeText(transactionRecordID);
-//             }
-//           };
-//           row.cells[4].insertAdjacentElement("beforeend", button);
-//         }
-//     });
-//     observer.observe(target, { childList: true });
-//   }
-//   addBusinessSearchButton();
-// });
-
-document.addEventListener("EXT_API_CAPTURE", (e) => {
-  const data = e.detail;
-  console.log("[API Sniffer]", data);
-  let title = document.querySelector(".d-print-none.atlas_nav_menu .atlas-page-header-container .atlas-page-title");
-  if (title) {
-    title.dataset.x = "";
-  }
-
-  if (data?.url === "/api/verification/kybSearch" && data.body?.transactionId) {
-    if (title) {
-      title.dataset.x = data.body.transactionId
-    }
-  }
-
-});
-
-(function () {
-  function initTableHighlight() {
-    const table = document.querySelector('.list-table');
-    if (!table) return;
-
-    const headerRow = table.tHead ? table.tHead.rows[0] : table.rows[0];
-    if (!headerRow) return;
-
-    table.querySelectorAll('tbody td').forEach(td => {
-      td.addEventListener('mouseenter', e => {
-        const colIndex = e.target.cellIndex;
-
-        table.querySelectorAll('.highlight-col').forEach(el =>
-          el.classList.remove('highlight-col')
-        );
-
-        const th = headerRow.cells[colIndex];
-        if (th) {
-          th.classList.add('highlight-col');
-        }
-      });
-
-      td.addEventListener('mouseleave', () => {
-        table.querySelectorAll('.highlight-col').forEach(el =>
-          el.classList.remove('highlight-col')
-        );
-      });
-    });
-  }
-
-  initTableHighlight();
-
-  const observer = new MutationObserver(() => {
-    initTableHighlight();
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-})();
 
 document.addEventListener("DOMContentLoaded", async () => {
-  initSettings();
+  await initSettings();
+  injectDashboard();
 
-  const microFrontEndRoot = document.querySelector("#micro-frontend-root");
-  const debugButton = createDebugButton();
-
-  if (microFrontEndRoot) {
-    microFrontEndRoot.prepend(debugButton);
-  } else {
-    attachButtonOldUI(debugButton);
+  if (globalThis.ExtensionSettings && globalThis.ExtensionSettings.allowOptimize) {
+    if (globalThis.HiddingChatGPTSection) {
+      globalThis.HiddingChatGPTSection.start();
+    }
   }
-
-  observeTransactionTable();
-  addBusinessSearchButton();
 });
 
-/* ---------------- SETTINGS ---------------- */
 async function initSettings() {
   globalThis.ExtensionSettings = await getSettings();
   onSettingsChanged(next => {
@@ -324,167 +45,218 @@ async function initSettings() {
   });
 }
 
-/* ---------------- BUTTON ---------------- */
-function createDebugButton() {
-  const button = document.createElement("button");
-  button.id = "mainDebugButton";
-  button.type = "button";
-  button.className = "btn btn-primary";
-  button.textContent = "Debug (F1)";
-  button.style.alignItems = "center";
-  button.style.height = "30px";
-  button.style.padding = "0px 10px";
-  button.onclick = handleDebugClick;
-  return button;
-}
+// content.js
 
-async function handleDebugClick(event) {
-  const transactionId = getTransactionId();
+function injectDashboard() {
+  if (document.getElementById('chat-optimizer-dashboard')) return;
 
-  if (!transactionId) return;
+  const style = document.createElement('style');
+  style.textContent = `
+        /* ==================================================
+           1. CẤU HÌNH MÀU SẮC DÀNH CHO CHẾ ĐỘ SÁNG (LIGHT MODE) 
+           ================================================== */
+        
+        /* Bảng Dashboard: Giữ nguyên chuẩn Sáng (Trắng) */
+        #chat-optimizer-dashboard {
+            --cod-bg-color: rgba(255, 255, 255, 0.95);    
+            --cod-text-color: #333333;
+            --cod-border-color: rgba(0, 0, 0, 0.1);
+            --cod-accent-color: #10a37f;
+            --cod-btn-bg-color: #f1f1f1;
+            --cod-btn-text-color: #333333;
+            --cod-btn-hover-color: #e5e5e5;
+            --cod-dot-inactive-color: #ef4444;
+        }
 
-  const setting = globalThis.ExtensionSettings;
-  goToDebug(transactionId, event.ctrlKey, setting.debugUrlMapping);
+        /* Nút Icon: Chơi trội nền Đen mờ */
+        #cod-fab {
+            --fab-bg-color: rgba(20, 21, 23, 0.85);        
+            --fab-border-color: rgba(255, 255, 255, 0.15); 
+        }
 
-  await navigator.clipboard.writeText(transactionId);
-}
+        /* ==================================================
+           2. CẤU HÌNH MÀU SẮC DÀNH CHO CHẾ ĐỘ TỐI (DARK MODE) 
+           ================================================== */
+        @media (prefers-color-scheme: dark) {
+            /* Bảng Dashboard: Giữ nguyên chuẩn Tối (Đen) */
+            #chat-optimizer-dashboard {
+                --cod-bg-color: rgba(32, 33, 35, 0.95);    
+                --cod-text-color: #ececf1;
+                --cod-border-color: rgba(255, 255, 255, 0.1);
+                --cod-accent-color: #10a37f;
+                --cod-btn-bg-color: #40414F;
+                --cod-btn-text-color: white;
+                --cod-btn-hover-color: #565869;
+                --cod-dot-inactive-color: #ef4444;
+            }
 
-/* ---------------- TRANSACTION ID ---------------- */
-function getTransactionId() {
-  const urlParams = new URLSearchParams(window.location.search);
+            /* Nút Icon: Chơi trội nền Trắng mờ */
+            #cod-fab {
+                --fab-bg-color: rgba(255, 255, 255, 0.85);  
+                --fab-border-color: rgba(0, 0, 0, 0.15);    
+            }
+        }
 
-  if (isMicroFrontend()) {
-    return getTransactionIdNewUI() ?? urlParams.get("transactionRecordId");
-  }
+        /* ==================================================
+           3. CÁC THUỘC TÍNH CSS CỐT LÕI (GIỮ NGUYÊN)
+           ================================================== */
 
-  return getTransactionIdOldUI() ?? urlParams.get("transactionRecordId");
-}
+        /* Khung Dashboard chính */
+        #chat-optimizer-dashboard {
+            position: fixed; bottom: 150px; right: 20px; z-index: 999999;
+            background: var(--cod-bg-color); color: var(--cod-text-color);
+            padding: 12px 16px; border-radius: 12px;
+            font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);
+            border: 1px solid var(--cod-border-color);
+            display: flex; flex-direction: column; gap: 10px; width: 260px;
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
+            transform-origin: right bottom;
+        }
 
-function isMicroFrontend() {
-  return !!document.querySelector("#micro-frontend-root");
-}
+        #chat-optimizer-dashboard.minimized {
+            transform: translateX(120px) scale(0.8); opacity: 0; pointer-events: none;
+        }
 
-/* ---------- NEW UI (micro frontend) ---------- */
-function normalize(text) {
-  return text?.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
+        /* Header và Buttons Dashboard */
+        .cod-header { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; color: var(--cod-accent-color); margin-bottom: 2px; }
+        .cod-btn-close { background: transparent; border: none; color: #888; cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 6px; border-radius: 4px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .cod-btn-close:hover { color: var(--cod-text-color); background: var(--cod-btn-bg-color); }
+        .cod-stats { display: flex; justify-content: space-between; font-size: 12px; opacity: 0.9; }
+        .cod-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+        .cod-btn { flex: 1; min-width: 45%; background: var(--cod-btn-bg-color); color: var(--cod-btn-text-color); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: background 0.2s; }
+        .cod-btn:hover { background: var(--cod-btn-hover-color); }
+        .cod-btn:active { transform: scale(0.96); }
+        .cod-btn.btn-start { background: var(--cod-accent-color); color: white; }
+        .cod-btn.btn-start:hover { background: #0e906f; }
+        .cod-btn.btn-stop { background: #ef4444; color: white; }
+        .cod-btn.btn-stop:hover { background: #dc2626; }
+        .cod-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cod-dot-inactive-color); margin-right: 6px; transition: all 0.3s;}
+        .cod-status-dot.active { background: var(--cod-accent-color); box-shadow: 0 0 8px var(--cod-accent-color); }
 
-function getTransactionIdNewUI() {
-  const items = document.querySelectorAll("#WideTransactionDetails li");
-  for (const li of items) {
-    if (normalize(li.textContent).includes("transactionid")) {
-      return li.querySelector("span:last-child")?.textContent;
+        /* ==================================================
+           4. STYLING RIÊNG CHO NÚT ICON (FAB)
+           ================================================== */
+        #cod-fab {
+            position: fixed; bottom: 150px; right: 20px; z-index: 999998;
+            width: 44px; height: 44px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.3); backdrop-filter: blur(8px);
+            
+            /* SỬ DỤNG BIẾN RIÊNG --fab */
+            background: var(--fab-bg-color);     
+            border: 1px solid var(--fab-border-color); 
+            
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease;
+            transform: scale(0) rotate(-90deg); opacity: 0; pointer-events: none;
+        }
+        
+        #cod-fab:hover { transform: scale(1.1) !important; }
+        
+        #cod-fab.visible { transform: scale(1) rotate(0deg); opacity: 1; pointer-events: auto; }
+    `;
+  document.head.appendChild(style);
+
+  // Tạo HTML cho Dashboard
+  const panel = document.createElement('div');
+  panel.id = 'chat-optimizer-dashboard';
+  panel.innerHTML = `
+        <div class="cod-header">
+            <div><span class="cod-status-dot" id="cod-dot"></span>Optimizer</div>
+            <button class="cod-btn-close" id="cod-btn-minimize" title="Thu nhỏ">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+        </div>
+        <div class="cod-stats">
+            <span>Total: <b id="cod-total">0</b></span>
+            <span>Vis: <b id="cod-visible">0</b></span>
+            <span>Hid: <b id="cod-hidden">0</b></span>
+        </div>
+        <div class="cod-buttons">
+            <button class="cod-btn btn-start" id="cod-btn-start">Start</button>
+            <button class="cod-btn btn-stop" id="cod-btn-stop">Stop</button>
+            <button class="cod-btn" id="cod-btn-restore">Restore <span id="cod-val-res">5</span></button>
+            <button class="cod-btn" id="cod-btn-hide">Hide keep <span id="cod-val-keep">10</span></button>
+        </div>
+    `;
+  document.body.appendChild(panel);
+
+  // Tạo HTML cho Nút Icon
+  const fab = document.createElement('button');
+  fab.id = 'cod-fab';
+  fab.title = "Mở bảng điều khiển Optimizer";
+  fab.innerHTML = `
+        <img src="${logo192}" alt="Optimizer" style="width: 48px; height: 48px; border-radius: 50%; object-fit: contain;">
+    `;
+  document.body.appendChild(fab);
+
+  // ==========================================
+  // SỰ KIỆN ẨN / HIỆN (TOGGLE)
+  // ==========================================
+  const btnMinimize = document.getElementById('cod-btn-minimize');
+
+  // Khi nhấn nút ">" trong bảng -> Ẩn bảng, Hiện Icon
+  btnMinimize.addEventListener('click', () => {
+    panel.classList.add('minimized');
+    fab.classList.add('visible');
+  });
+
+  // Khi nhấn vào Icon tròn -> Hiện bảng, Ẩn Icon
+  fab.addEventListener('click', () => {
+    panel.classList.remove('minimized');
+    fab.classList.remove('visible');
+    // Reset lại scale inline để tránh lỗi hover
+    fab.style.transform = '';
+  });
+
+  // ==========================================
+  // CÁC SỰ KIỆN GỐC
+  // ==========================================
+  const elTotal = document.getElementById('cod-total');
+  const elVisible = document.getElementById('cod-visible');
+  const elHidden = document.getElementById('cod-hidden');
+  const elDot = document.getElementById('cod-dot');
+  const elValRes = document.getElementById('cod-val-res');
+  const elValKeep = document.getElementById('cod-val-keep');
+
+  document.getElementById('cod-btn-start').addEventListener('click', () => {
+    if (globalThis.HiddingChatGPTSection) globalThis.HiddingChatGPTSection.start();
+  });
+
+  document.getElementById('cod-btn-stop').addEventListener('click', () => {
+    if (globalThis.HiddingChatGPTSection) globalThis.HiddingChatGPTSection.stop();
+  });
+
+  document.getElementById('cod-btn-restore').addEventListener('click', () => {
+    if (globalThis.HiddingChatGPTSection) {
+      const count = globalThis.ExtensionSettings?.restoreCount || 5;
+      globalThis.HiddingChatGPTSection.manualRestore(count);
     }
-  }
+  });
 
-  return null;
-}
-
-/* ---------- OLD UI ---------- */
-function getTransactionIdOldUI() {
-  return (
-    document.getElementsByClassName("file-icon")[0]?.parentNode?.textContent?.trim() ??
-    document.getElementsByClassName("value fs-exclude")[5]?.innerText ??
-    null
-  );
-}
-
-/* ---------------- BUTTON ATTACHMENT ---------------- */
-function attachButtonOldUI(button) {
-  let target =
-    document.querySelector(".atlas-box.atlas-get-support-box.help a");
-
-  if (target) {
-    target.parentNode?.replaceChild(button, target);
-    return;
-  }
-
-  target = document.querySelector(
-    "#main-content-div > div.d-print-none.atlas_nav_menu > div > div"
-  );
-
-  if (isVerificationHeader(target)) {
-    target.insertAdjacentElement("beforeend", button);
-    return;
-  }
-
-  target = document.querySelector(".pageHeaderText");
-
-  if (isVerificationHeader(target)) {
-    target.insertAdjacentElement("beforeend", button);
-    return;
-  }
-
-  if (document.location.href.includes("businesssearch")) {
-    attachBusinessSearchButton(button);
-  }
-}
-
-function isVerificationHeader(el) {
-  const text = el?.innerText?.toLowerCase();
-  return text === "verification" || text === "run a verification";
-}
-
-/* ---------- BUSINESS SEARCH PAGE ---------- */
-function attachBusinessSearchButton(button) {
-  const header = document.querySelector(
-    ".d-print-none.atlas_nav_menu .atlas-page-header-container .atlas-page-title"
-  );
-
-  if (!header) return;
-
-  header.insertAdjacentElement("beforeend", button);
-
-  button.onclick = async (event) => {
-    const transactionId = header.dataset.x;
-
-    if (!transactionId) return;
-
-    goToDebug(transactionId, event.ctrlKey);
-    await navigator.clipboard.writeText(transactionId);
-  };
-}
-
-/* ---------------- TABLE OBSERVER ---------------- */
-function observeTransactionTable() {
-  const target = document.querySelector(".transaction-page");
-
-  if (!target) return;
-
-  const addDebugButtonsToTable = () => {
-    const table = document.querySelector(
-      "#content > div > div.section.search-results > table"
-    );
-
-    if (!table) return;
-
-    for (const row of table.rows) {
-      if (row.rowIndex === 0) continue;
-
-      const cell = row.cells[4];
-      if (!cell) continue;
-
-      // Guard: skip if Debug button already added
-      if (cell.querySelector("button.ext-debug-btn")) continue;
-
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "btn btn-primary ext-debug-btn";
-      button.textContent = "Debug";
-
-      button.onclick = async (event) => {
-        const transactionId = cell.firstChild?.textContent?.trim();
-        if (!transactionId) return;
-
-        const setting = globalThis.ExtensionSettings;
-        goToDebug(transactionId, event.ctrlKey, setting?.debugUrlMapping);
-        await navigator.clipboard.writeText(transactionId);
-      };
-
-      cell.insertAdjacentElement("beforeend", button);
+  document.getElementById('cod-btn-hide').addEventListener('click', () => {
+    if (globalThis.HiddingChatGPTSection) {
+      globalThis.HiddingChatGPTSection.manualHide();
     }
-  };
+  });
 
-  const observer = new MutationObserver(addDebugButtonsToTable);
-  observer.observe(target, { childList: true, subtree: true });
+  setInterval(() => {
+    const keep = globalThis.ExtensionSettings?.keepCount || 15;
+    const res = globalThis.ExtensionSettings?.restoreCount || 5;
+    elValKeep.innerText = keep;
+    elValRes.innerText = res;
+
+    if (globalThis.HiddingChatGPTSection) {
+      const stats = globalThis.HiddingChatGPTSection.getStats();
+      elTotal.innerText = stats.total;
+      elVisible.innerText = stats.visible;
+      elHidden.innerText = stats.hidden;
+
+      if (stats.isActive) {
+        elDot.classList.add('active');
+      } else {
+        elDot.classList.remove('active');
+      }
+    }
+  }, 500);
 }

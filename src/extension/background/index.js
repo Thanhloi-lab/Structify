@@ -1,13 +1,11 @@
 /* global chrome */
 import { initCdp } from "./cdp.js";
-import { initContextMenus } from "./contextMenus.js";
 import { initMessages } from "./messages.js";
 
 /* =============================
    Initialization
 ============================= */
 initCdp();
-initContextMenus();
 initMessages();
 
 /* =============================

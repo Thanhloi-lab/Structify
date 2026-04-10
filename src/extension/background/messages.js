@@ -1,17 +1,10 @@
 /* global chrome */
-import { startPick, stopPick, detachDebugger, getPickedText, setPickedText } from "./cdp.js";
 import { getEffectiveSettings, persistSettings } from "./settings.js";
 import { getSettings, clearLocal, JSON_COLORS_ARRAY, XML_COLORS_ARRAY, getLocal } from "../utils/setting.js";
 
 const MSG = {
   OPEN_BEAUTIFY_WINDOW: "OPEN_BEAUTIFY_WINDOW",
   OPEN_CONVERT_CSHARP_WINDOW: "OPEN_CONVERT_CSHARP_WINDOW",
-
-  CDP_START_PICK: "CDP_START_PICK",
-  CDP_STOP_PICK: "CDP_STOP_PICK",
-  CDP_DETACH: "CDP_DETACH",
-  CDP_GET_TEXT: "CDP_GET_TEXT",
-  CDP_SET_TEXT: "CDP_SET_TEXT",
 
   GET_SETTINGS: "GET_SETTINGS",
   SAVE_SETTINGS: "SAVE_SETTINGS",
@@ -52,6 +45,7 @@ export function initMessages() {
             await openDialog(msg.type, msg.text);
             return ok(sendResponse);
           }
+
           case 'OPEN_BACKGROUND_BEAUTIFY_WINDOW': {
             console.log("[BG] 2. Received OPEN_BACKGROUND_BEAUTIFY_WINDOW from MSGS. callerTabId:", _sender.tab ? _sender.tab.id : "NONE");
             const code = encodeURIComponent(msg.text ?? "");
@@ -69,32 +63,6 @@ export function initMessages() {
             return ok(sendResponse);
           }
 
-          /* ---------- CDP: Start pick ---------- */
-          case MSG.CDP_START_PICK: {
-            await startPick(msg.tabId);
-            return ok(sendResponse);
-          }
-
-          /* ---------- CDP: Stop / Detach ---------- */
-          case MSG.CDP_STOP_PICK: {
-            await stopPick(msg.tabId);
-            return ok(sendResponse);
-          }
-          case MSG.CDP_DETACH: {
-            await detachDebugger(msg.tabId);
-            return ok(sendResponse);
-          }
-
-          /* ---------- CDP: Get/Set text ---------- */
-          case MSG.CDP_GET_TEXT: {
-            const text = await getPickedText(msg.tabId);
-            return ok(sendResponse, { text });
-          }
-          case MSG.CDP_SET_TEXT: {
-            await setPickedText(msg.tabId, msg.text);
-            return ok(sendResponse);
-          }
-
           /* ---------- Settings: get / save / defaults ---------- */
           case MSG.GET_SETTINGS: {
             const eff = await getEffectiveSettings();
@@ -105,8 +73,6 @@ export function initMessages() {
             try {
               const payload = msg.payload || {};
               const merged = {
-                // defaults
-                serverLocation: payload.serverLocation || "us",
                 autoClosePreviewInSec:
                   payload.autoClosePreviewInSec && Number(payload.autoClosePreviewInSec) >= 60
                     ? payload.autoClosePreviewInSec
@@ -127,7 +93,6 @@ export function initMessages() {
             const defaults = await getSettings();
             const eff = {
               ...defaults,
-              serverLocation: "us",
               autoClosePreviewInSec: "60",
             };
             const saved = await persistSettings(eff);
@@ -147,7 +112,7 @@ export function initMessages() {
             } else if (msg.type === MSG.LOAD_DEFAULT_XML_COLOR) {
               next = { ...next, xmlColors: XML_COLORS_ARRAY };
             } else if (msg.type === MSG.LOAD_DEFAULT_DEBUG_SETTING) {
-              next = { ...next, pasteToCPUrls: [], serverLocation: "us" };
+              next = { ...next, pasteToCPUrls: []};
             } else if (msg.type === MSG.LOAD_DEFAULT_TOGGLE) {
               next = {
                 ...next,
@@ -175,7 +140,6 @@ export function initMessages() {
       }
     })();
 
-    // Cho phép sendResponse async
     return true;
   });
 }

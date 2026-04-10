@@ -78,9 +78,6 @@ export default function PreviewCodeSettings() {
   const handleChangeInputSettings = async () => {
     const next = { ...settings };
 
-    // Server location code
-    if (!next.serverLocation) next.serverLocation = "us";
-
     // Auto close preview (>= 60 giây)
     const n = Number(next.autoClosePreviewInSec);
     if (!Number.isFinite(n) || n < 60) next.autoClosePreviewInSec = "60";

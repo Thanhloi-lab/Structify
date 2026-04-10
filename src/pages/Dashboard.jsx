@@ -14,26 +14,10 @@ import { useSettings } from "../contexts/SettingsContext";
 import { sendMessageRuntime } from "../apis/internalCall";
 import LoadingLayout from "../components/LoadingLayout";
 import {
-  CONFLUENCE_HELPER,
   SETTINGS,
-  TRULIOO_UTILITY,
 } from "../constants/route";
 
 const tools = [
-  {
-    title: "Trulioo Utility",
-    description: "Validate & format Trulioo data",
-    icon: <BuildIcon sx={{ fontSize: 48, color: "#f57c00" }} />,
-    onClick: (callback) => callback(TRULIOO_UTILITY),
-    key: "truliooUtility",
-  },
-  {
-    title: "Confluence Page Helper",
-    description: "Edit <pre> innerText",
-    icon: <CodeIcon sx={{ fontSize: 48, color: "#3f51b5" }} />,
-    onClick: (callback) => callback(CONFLUENCE_HELPER),
-    key: "confluenceFormatPreElement",
-  },
   {
     title: "Settings",
     description: "Edit <pre> innerText",

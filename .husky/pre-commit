@@ -2,20 +2,20 @@
 
 echo "🔍 Running pre-commit checks..."
 
-# ✅ 1. Run ESLint (optional nhưng khuyên dùng)
-echo "\n🧹 Linting code..."
+# ✅ 1. Run ESLint
+echo "🧹 Linting code..."
 npm run lint
 if [ $? -ne 0 ]; then
   echo "❌ ESLint failed. Fix errors before committing."
   exit 1
 fi
 
-# ✅ 2. Check dependencies (depcheck script)
-echo "\n📦 Checking dependencies..."
+# ✅ 2. Check dependencies
+echo "📦 Checking dependencies..."
 node scripts/check-deps.js
 if [ $? -ne 0 ]; then
   echo "❌ Dependency check failed."
   exit 1
 fi
 
-echo "\n✅ All checks passed. Proceeding with commit."
+echo "✅ All checks passed. Proceeding with commit."

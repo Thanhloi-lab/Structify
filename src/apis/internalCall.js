@@ -1,5 +1,3 @@
-/* global chrome */
-
 const isLocal = () => process.env.NODE_ENV === "development" || !window?.chrome?.tabs || !window?.chrome?.runtime;
 
 export function getTabs(setTabs, setSelectedTabId) {
@@ -49,7 +47,7 @@ export function getTabs(setTabs, setSelectedTabId) {
       });
     });
   });
-};
+}
 
 export function getTab(setTabId) {
   if (isLocal()) {

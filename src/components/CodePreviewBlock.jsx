@@ -32,7 +32,7 @@ export default function CodePreviewBlock({
   const { settings, ready, isLoading, error } = useSettings();
   const language = useMemo(
     () => lang ?? (convertToCSharp ? C_SHARP_TYPE : detectDataType(code)),
-    [code, lang, convertToCSharp]
+    [code, lang, convertToCSharp],
   );
 
   useEffect(() => {
@@ -99,13 +99,15 @@ export default function CodePreviewBlock({
   const closeSelf = () => {
     try {
       window.close();
-    } catch (e) {}
+    } catch (e) {
+      console.error(e);
+    }
     if (chrome?.tabs?.query && chrome?.tabs?.remove) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs && tabs[0]) chrome.tabs.remove(tabs[0].id);
         else if (chrome?.windows?.getCurrent && chrome?.windows?.remove) {
           chrome.windows.getCurrent(
-            (win) => win && chrome.windows.remove(win.id)
+            (win) => win && chrome.windows.remove(win.id),
           );
         }
       });

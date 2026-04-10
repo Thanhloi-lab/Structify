@@ -16,7 +16,7 @@ export default function LoadingPage() {
     >
       <CircularProgress color="primary" />
       <Typography variant="h6" sx={{ mt: 2 }}>
-        Injecting Trojan, please wait...
+        Loading Structify ...
       </Typography>
     </Box>
   );

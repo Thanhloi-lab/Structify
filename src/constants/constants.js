@@ -22,13 +22,6 @@ export const JSON_COLORS_ARRAY = [
 export const DEFAULT_SETTINGS = {
   beautifyCode: true,
   toCSharp: true,
-  confluenceFormatPreElement: true,
-  pasteToCP: true,
-  fillData: true,
-  truliooUtility: true,
-  copyEvidence: true,
-  copyAndCompareVariant: true,
   jsonColors: JSON_COLORS_ARRAY,
   xmlColors: XML_COLORS_ARRAY,
-  pasteToCPUrls: []
 };

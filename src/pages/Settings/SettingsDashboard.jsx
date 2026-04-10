@@ -13,16 +13,9 @@ import { useNavigate } from "react-router-dom";
 import {
   SETTINGS_PREVIEW_CODE,
   SETTINGS_TOGGLE_MENU,
-  SETTINGS_DEBUG,
 } from "../../constants/route";
 
 const tools = [
-  {
-    title: "Debug",
-    icon: <PestControlIcon sx={{ fontSize: 48, color: "#f57c00" }} />,
-    onClick: (callback) => callback(SETTINGS_DEBUG),
-    key: "truliooUtility",
-  },
   {
     title: "Preview code",
     icon: <CodeIcon sx={{ fontSize: 48, color: "#3f51b5" }} />,

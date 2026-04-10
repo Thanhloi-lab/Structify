@@ -59,7 +59,9 @@ export async function startPick(tabId) {
     if (pickingTabs.has(tabId)) {
       try {
         await setInspectMode(target, "none");
-      } catch {}
+      } catch (e){
+        console.error(e)
+      }
       pickingTabs.delete(tabId);
     }
   }, 15000);

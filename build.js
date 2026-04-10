@@ -1,4 +1,4 @@
-const esbuild = require('esbuild');
+const esbuild = require('esbuild')
 
 Promise.all([
   esbuild.build({
@@ -10,17 +10,17 @@ Promise.all([
     minify: false
   }),
   esbuild.build({
-    entryPoints: ['./src/extension/background/index.js'],
+    entryPoints: ['./src/extension/utils/hiddingChatGPTSection.js'],
     bundle: true,
-    outfile: 'build/background.js',
+    outfile: 'build/hiddingChatGPTSection.js',
     format: 'iife',
-    target: ['chrome114'],
+    target: ['chrome114', 'firefox115'],
     minify: false
   }),
   esbuild.build({
-    entryPoints: ['./src/extension/inpage-hook.js'],
+    entryPoints: ['./src/extension/background/index.js'],
     bundle: true,
-    outfile: 'build/inpage-hook.js',
+    outfile: 'build/background.js',
     format: 'iife',
     target: ['chrome114'],
     minify: false

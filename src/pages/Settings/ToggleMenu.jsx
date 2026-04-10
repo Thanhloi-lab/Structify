@@ -20,15 +20,9 @@ import { useSettings } from "../../contexts/SettingsContext";
 const LABELS = {
   beautifyCode: "Beautify Code",
   toCSharp: "Convert to C#",
-  confluenceFormatPreElement: "Confluence Format Pre Element",
-  pasteToCP: "Paste to CP",
-  fillData: "Fill Data",
-  truliooUtility: "Trulioo Utility",
-  copyEvidence: "Capture evidence in AdminPortal",
-  copyAndCompareVariant:
-    "Copy variant in AdminPortal as Array and compare it with DSDR",
   jsonColors: "JSON's colors setting",
   xmlColors: "XML's colors setting",
+  allowChatGPTOptimize: "Allow ChatGPT Optimizer"
 };
 
 export default function ToggleMenuSettings() {

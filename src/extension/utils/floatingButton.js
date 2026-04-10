@@ -1,5 +1,4 @@
 /* global chrome */
-/* global globalThis */
 let floatingGroup = null;
 let selectedTextCache = '';
 

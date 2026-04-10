@@ -289,17 +289,6 @@ export default function DialogApp() {
                 <PhotoCameraIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-
-            <Tooltip title="Close (Esc)">
-              <IconButton
-                onClick={closeSelf}
-                size="small"
-                edge="end"
-                sx={{ color: "#fff", ml: 2 }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
           </Box>
         </Toolbar>
       </AppBar>

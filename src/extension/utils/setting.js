@@ -17,18 +17,17 @@ export const JSON_COLORS_ARRAY = [
 ];
 export const SETTINGS_KEY = "settings";
 export const DEFAULTS = {
+  // Code Preview block
   beautifyCode: true,
   toCSharp: true,
-  confluenceFormatPreElement: true,
-  pasteToCP: true,
-  fillData: true,
-  truliooUtility: true,
-  copyEvidence: true,
-  copyAndCompareVariant: true,
   jsonColors: JSON_COLORS_ARRAY,
   xmlColors: XML_COLORS_ARRAY,
-  pasteToCPUrls: [],
-  debugUrlMapping: []
+  // ChatGPT optimizer
+  allowChatGPTOptimize: true,
+  keepCount: 15,
+  restoreCount: 5,
+  chatContainerSelector: '#main div.flex.flex-col.text-sm.pb-25',
+  completelyRemove: true
 };
 
 export function getSettings() {

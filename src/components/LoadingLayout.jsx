@@ -8,7 +8,7 @@ export default function LoadingLayout({initialState = false}) {
 
   useEffect(() => {
     let timeout;
-
+    
     setLoading(true);
     timeout = setTimeout(() => {
       setLoading(false);

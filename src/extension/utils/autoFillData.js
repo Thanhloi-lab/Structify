@@ -18,24 +18,24 @@ const GENERATORS = {
   FullName: (c, l) => getData("FullName", c, l),
 
   // --- Address / Location ---
-  Location: (c, l) => getLocation(c),
-  Address1: (c, l) => getLocation(c).Address1 || "",
-  Address2: (c, l) => getLocation(c).Address2 || "",
-  AddressCountryCode: (c, l) => c,
+  Location: (c, _l) => getLocation(c),
+  Address1: (c, _l) => getLocation(c).Address1 || "",
+  Address2: (c, _l) => getLocation(c).Address2 || "",
+  AddressCountryCode: (c, _l) => c,
   AddressCountryName: (c, l) => getData("AddressCountryName", c, l),
-  City: (c, l) => getLocation(c).City || "",
-  Suburb: (c, l) => getLocation(c).Suburb || "",
-  StateProvinceCode: (c, l) => getLocation(c).StateProvinceCode || "",
-  PostalCode: (c, l) => getLocation(c).PostalCode || "",
-  BuildingNumber: (c, l) => getLocation(c).BuildingNumber || "1",
-  BuildingName: (c, l) => getLocation(c).BuildingName || "",
-  StreetName: (c, l) => getLocation(c).StreetName || "",
-  StreetType: (c, l) => getLocation(c).StreetType || "rd",
-  UnitNumber: (c, l) => getLocation(c).UnitNumber || "2",
-  FloorNumber: (c, l) => getLocation(c).FloorNumber || "1",
-  BlockNumber: (c, l) => getLocation(c).BlockNumber || "2",
-  PropertyName: (c, l) => getLocation(c).PropertyName || "",
-  POBox: (c, l) => getLocation(c).POBox || "3",
+  City: (c, _l) => getLocation(c).City || "",
+  Suburb: (c, _l) => getLocation(c).Suburb || "",
+  StateProvinceCode: (c, _l) => getLocation(c).StateProvinceCode || "",
+  PostalCode: (c, _l) => getLocation(c).PostalCode || "",
+  BuildingNumber: (c, _l) => getLocation(c).BuildingNumber || "1",
+  BuildingName: (c, _l) => getLocation(c).BuildingName || "",
+  StreetName: (c, _l) => getLocation(c).StreetName || "",
+  StreetType: (c, _l) => getLocation(c).StreetType || "rd",
+  UnitNumber: (c, _l) => getLocation(c).UnitNumber || "2",
+  FloorNumber: (c, _l) => getLocation(c).FloorNumber || "1",
+  BlockNumber: (c, _l) => getLocation(c).BlockNumber || "2",
+  PropertyName: (c, _l) => getLocation(c).PropertyName || "",
+  POBox: (c, _l) => getLocation(c).POBox || "3",
 
   // --- Identification ---
   PassportNumber: (c, l) => getData("PassportNumber", c, l),
@@ -59,13 +59,13 @@ const GENERATORS = {
   Gender: () => (Math.random() < 0.5 ? "M" : "F"),
   Region: (c, l) => getData("Region", c, l),
   County: (c, l) => getData("County", c, l),
-  Latitude: (c, l) => getLocation(c).Latitude || "",
-  Longitude: (c, l) => getLocation(c).Longitude || "",
-  DayOfBirth: (c, l) => numStr(1, 28),
-  MonthOfBirth: (c, l) => numStr(1, 12),
-  YearOfBirth: (c, l) => numStr(1930, 2000),
-  PassportMRZLine1: (c, l) => randomMRZLine1(c),
-  PassportMRZLine2: (c, l) => randomMRZLine2(c),
+  Latitude: (c, _l) => getLocation(c).Latitude || "",
+  Longitude: (c, _l) => getLocation(c).Longitude || "",
+  DayOfBirth: (_c, _l) => numStr(1, 28),
+  MonthOfBirth: (_c, _l) => numStr(1, 12),
+  YearOfBirth: (_c, _l) => numStr(1930, 2000),
+  PassportMRZLine1: (c, _l) => randomMRZLine1(c),
+  PassportMRZLine2: (c, _l) => randomMRZLine2(c),
 };
 
 function randomMRZLine1(country) {
@@ -238,7 +238,7 @@ export function generateFormData(fieldNames, country) {
   });
 
   return data;
-};
+}
 
 export const fillDataOldUI = () => {
   const countryName = document.querySelector(".country-name").innerText;

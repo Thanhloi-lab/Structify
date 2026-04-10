@@ -2,9 +2,6 @@ import { JSON_TYPE, XML_TYPE, UNKNOWN_TYPE } from '../constants/constants';
 import vkbeautify from 'vkbeautify';
 import toast from "react-hot-toast";
 
-export function showCopyPopup(code) {
-  // Có thể là navigator.clipboard + toast
-}
 export function removeTags(str, emptyIfNull) {
   if ((str === null) || (str === ''))
     return false;
@@ -44,7 +41,9 @@ export function detectDataType(str) {
     try {
       const parsed = JSON.parse(trimmed);
       if (typeof parsed === 'object') return JSON_TYPE;
-    } catch (_) { }
+    } catch (_){
+      // intensional ignore
+    }
 
     if (typeof DOMParser !== 'undefined') {
       const parser = new DOMParser();

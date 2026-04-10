@@ -12,7 +12,6 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "html-to-image": "^1.11.13",
-    "html2canvas": "^1.4.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.5.2",
@@ -27,7 +26,8 @@
     "start": "react-scripts start && node build",
     "build": "react-scripts build && node build",
     "eject": "react-scripts eject",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint": "eslint src"
   },
   "eslintConfig": {
     "extends": [

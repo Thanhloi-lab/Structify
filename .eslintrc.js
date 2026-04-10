@@ -31,20 +31,26 @@ module.exports = {
   },
 
   rules: {
+    "react/no-unescaped-entities": "off",
+    
     "no-undef": "off",
 
     "react/react-in-jsx-scope": "off",
 
     "react/prop-types": "off",
 
-    "no-unused-vars": "warn",
+    "no-unused-vars": ["warn", {
+      argsIgnorePattern: "^_",
+      varsIgnorePattern: "^_"
+    }],
     "no-console": "off",
 
     "import/no-unresolved": "off",
     "import/no-unused-modules": "off",
 
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn"
+    "react-hooks/exhaustive-deps": "warn",
+    "react-hooks/set-state-in-effect": "off"
   },
 
   ignorePatterns: [

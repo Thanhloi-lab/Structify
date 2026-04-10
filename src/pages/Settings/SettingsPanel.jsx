@@ -22,13 +22,6 @@ import { useSettings } from "../../contexts/SettingsContext";
 const LABELS = {
   beautifyCode: "Beautify Code",
   toCSharp: "Convert to C#",
-  confluenceFormatPreElement: "Confluence Format Pre Element",
-  pasteToCP: "Paste to CP",
-  fillData: "Fill Data",
-  truliooUtility: "Trulioo Utility",
-  copyEvidence: "Capture evidence in AdminPortal",
-  copyAndCompareVariant:
-    "Copy variant in AdminPortal as Array and compare it with DSDR",
   jsonColors: "JSON's colors setting",
   xmlColors: "XML's colors setting",
 };
@@ -38,7 +31,7 @@ export default function SettingsPanel() {
   const [saving, setSaving] = useState(false);
   const submitLockRef = useRef(false);
   const booleanKeys = useMemo(() => {
-    if (!settings) return []; // vẫn trả về mảng rỗng, không return component ở đây
+    if (!settings) return [];
     return Object.keys(LABELS).filter((k) => typeof settings?.[k] === "boolean");
   }, [settings]);
 
@@ -72,13 +65,8 @@ export default function SettingsPanel() {
     );
   }
 
-  // ===== Helpers =====
-  // Submit 2 input dạng text (serverLocation & autoClosePreviewInSec)
   const handleChangeInputSettings = async () => {
     const next = { ...settings };
-
-    // Server location code
-    if (!next.serverLocation) next.serverLocation = "us";
 
     // Auto close preview (>= 60 giây)
     const n = Number(next.autoClosePreviewInSec);
@@ -161,19 +149,6 @@ export default function SettingsPanel() {
         {/* Input settings */}
         <Stack direction="column" spacing={2} sx={{ mb: 2 }}>
           <Box>
-            <TextField
-              fullWidth
-              label="Server location code"
-              value={settings.serverLocation ?? ""}
-              onChange={(e) =>
-                setSettings((prev) => ({ ...prev, serverLocation: e.target.value }))
-              }
-              InputProps={{
-                sx: { fontFamily: "monospace", whiteSpace: "pre" },
-              }}
-              sx={{ mb: 2 }}
-            />
-
             <TextField
               label={`Auto close Code Preview window in seconds (>60)`}
               value={settings.autoClosePreviewInSec ?? ""}
