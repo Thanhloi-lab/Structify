@@ -22,20 +22,13 @@ document.addEventListener('keydown', async (e) => {
   }
   if (e.key === 'F4' && setting?.allowChatGPTOptimize && currentHost?.toLowerCase() === "chatgpt.com") {
     e.preventDefault();
-    const result = globalThis.HiddingChatGPTSection.toggle();
+    const result = globalThis.HidingChatGPTSection.toggle();
     showToast(`ChatGPT optimizer ${result}`);
   }
 });
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await initSettings();
-  injectDashboard();
-
-  if (globalThis.ExtensionSettings && globalThis.ExtensionSettings.allowOptimize) {
-    if (globalThis.HiddingChatGPTSection) {
-      globalThis.HiddingChatGPTSection.start();
-    }
-  }
+  await observeAndInject();
 });
 
 async function initSettings() {
@@ -45,127 +38,99 @@ async function initSettings() {
   });
 }
 
-// content.js
+let codIntervalId = null;
+let dashboardClickListener = null;
 
-function injectDashboard() {
-  if (document.getElementById('chat-optimizer-dashboard')) return;
+function injectDashboard(headerContainer) {
+  if (document.getElementById('cod-fab')) return;
+
+  const existingStyle = document.getElementById('cod-style');
+  if (existingStyle) existingStyle.remove();
+
+  const existingPanel = document.getElementById('chat-optimizer-dashboard');
+  if (existingPanel) existingPanel.remove();
+
+  if (codIntervalId) {
+    clearInterval(codIntervalId);
+  }
+  if (dashboardClickListener) {
+    document.removeEventListener('click', dashboardClickListener);
+  }
 
   const style = document.createElement('style');
+  style.id = 'cod-style';
   style.textContent = `
-        /* ==================================================
-           1. CẤU HÌNH MÀU SẮC DÀNH CHO CHẾ ĐỘ SÁNG (LIGHT MODE) 
-           ================================================== */
-        
-        /* Bảng Dashboard: Giữ nguyên chuẩn Sáng (Trắng) */
-        #chat-optimizer-dashboard {
-            --cod-bg-color: rgba(255, 255, 255, 0.95);    
-            --cod-text-color: #333333;
-            --cod-border-color: rgba(0, 0, 0, 0.1);
-            --cod-accent-color: #10a37f;
-            --cod-btn-bg-color: #f1f1f1;
-            --cod-btn-text-color: #333333;
-            --cod-btn-hover-color: #e5e5e5;
-            --cod-dot-inactive-color: #ef4444;
+        :root {
+            --cod-bg: rgba(255, 255, 255, 0.98);
+            --cod-text: #333;
+            --cod-border: rgba(0, 0, 0, 0.1);
         }
-
-        /* Nút Icon: Chơi trội nền Đen mờ */
-        #cod-fab {
-            --fab-bg-color: rgba(20, 21, 23, 0.85);        
-            --fab-border-color: rgba(255, 255, 255, 0.15); 
-        }
-
-        /* ==================================================
-           2. CẤU HÌNH MÀU SẮC DÀNH CHO CHẾ ĐỘ TỐI (DARK MODE) 
-           ================================================== */
         @media (prefers-color-scheme: dark) {
-            /* Bảng Dashboard: Giữ nguyên chuẩn Tối (Đen) */
-            #chat-optimizer-dashboard {
-                --cod-bg-color: rgba(32, 33, 35, 0.95);    
-                --cod-text-color: #ececf1;
-                --cod-border-color: rgba(255, 255, 255, 0.1);
-                --cod-accent-color: #10a37f;
-                --cod-btn-bg-color: #40414F;
-                --cod-btn-text-color: white;
-                --cod-btn-hover-color: #565869;
-                --cod-dot-inactive-color: #ef4444;
-            }
-
-            /* Nút Icon: Chơi trội nền Trắng mờ */
-            #cod-fab {
-                --fab-bg-color: rgba(255, 255, 255, 0.85);  
-                --fab-border-color: rgba(0, 0, 0, 0.15);    
+            :root {
+                --cod-bg: rgba(32, 33, 35, 0.95);
+                --cod-text: #ececf1;
+                --cod-border: rgba(255, 255, 255, 0.1);
             }
         }
 
-        /* ==================================================
-           3. CÁC THUỘC TÍNH CSS CỐT LÕI (GIỮ NGUYÊN)
-           ================================================== */
+        #cod-fab {
+            width: 34px; height: 34px; 
+            border-radius: 6px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            background: transparent; border: 1px solid transparent;
+            transition: all 0.2s;
+            margin-left: 4px;
+        }
+        #cod-fab:hover { background: rgba(155, 155, 155, 0.1); border-color: var(--cod-border); }
 
-        /* Khung Dashboard chính */
         #chat-optimizer-dashboard {
-            position: fixed; bottom: 150px; right: 20px; z-index: 999999;
-            background: var(--cod-bg-color); color: var(--cod-text-color);
-            padding: 12px 16px; border-radius: 12px;
-            font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);
-            border: 1px solid var(--cod-border-color);
-            display: flex; flex-direction: column; gap: 10px; width: 260px;
-            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
-            transform-origin: right bottom;
+            position: fixed; 
+            z-index: 999999;
+            background: var(--cod-bg); 
+            color: var(--cod-text);
+            padding: 16px; border-radius: 12px;
+            font-family: ui-sans-serif, system-ui, sans-serif;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--cod-border);
+            width: 280px;
+            display: flex; flex-direction: column; gap: 12px;
+            
+            transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            transform-origin: top right;
+            pointer-events: auto;
         }
 
         #chat-optimizer-dashboard.minimized {
-            transform: translateX(120px) scale(0.8); opacity: 0; pointer-events: none;
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+            pointer-events: none;
         }
 
-        /* Header và Buttons Dashboard */
-        .cod-header { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; color: var(--cod-accent-color); margin-bottom: 2px; }
-        .cod-btn-close { background: transparent; border: none; color: #888; cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 6px; border-radius: 4px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-        .cod-btn-close:hover { color: var(--cod-text-color); background: var(--cod-btn-bg-color); }
-        .cod-stats { display: flex; justify-content: space-between; font-size: 12px; opacity: 0.9; }
-        .cod-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-        .cod-btn { flex: 1; min-width: 45%; background: var(--cod-btn-bg-color); color: var(--cod-btn-text-color); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: background 0.2s; }
-        .cod-btn:hover { background: var(--cod-btn-hover-color); }
-        .cod-btn:active { transform: scale(0.96); }
-        .cod-btn.btn-start { background: var(--cod-accent-color); color: white; }
-        .cod-btn.btn-start:hover { background: #0e906f; }
-        .cod-btn.btn-stop { background: #ef4444; color: white; }
-        .cod-btn.btn-stop:hover { background: #dc2626; }
-        .cod-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cod-dot-inactive-color); margin-right: 6px; transition: all 0.3s;}
-        .cod-status-dot.active { background: var(--cod-accent-color); box-shadow: 0 0 8px var(--cod-accent-color); }
-
-        /* ==================================================
-           4. STYLING RIÊNG CHO NÚT ICON (FAB)
-           ================================================== */
-        #cod-fab {
-            position: fixed; bottom: 150px; right: 20px; z-index: 999998;
-            width: 44px; height: 44px; border-radius: 50%;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.3); backdrop-filter: blur(8px);
-            
-            /* SỬ DỤNG BIẾN RIÊNG --fab */
-            background: var(--fab-bg-color);     
-            border: 1px solid var(--fab-border-color); 
-            
-            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease;
-            transform: scale(0) rotate(-90deg); opacity: 0; pointer-events: none;
-        }
-        
-        #cod-fab:hover { transform: scale(1.1) !important; }
-        
-        #cod-fab.visible { transform: scale(1) rotate(0deg); opacity: 1; pointer-events: auto; }
+        .cod-header { display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: #10a37f; }
+        .cod-stats { display: flex; justify-content: space-between; font-size: 12px; }
+        .cod-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .cod-btn { flex: 1; min-width: 45%; border: none; padding: 7px; border-radius: 6px; cursor: pointer; font-size: 12px; background: #40414F; color: white; }
+        .cod-btn:hover { opacity: 0.8; }
+        .cod-btn.btn-start { background: #10a37f; }
+        .cod-btn.btn-stop { background: #ef4444; }
+        .cod-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #ef4444; margin-right: 5px; }
+        .cod-status-dot.active { background: #10a37f; box-shadow: 0 0 8px #10a37f; }
     `;
   document.head.appendChild(style);
 
-  // Tạo HTML cho Dashboard
+  const fab = document.createElement('button');
+  fab.id = 'cod-fab';
+  fab.innerHTML = `<img src="${logo192}" style="width:22px; height:22px; border-radius:50%;">`;
+  headerContainer.appendChild(fab);
+
   const panel = document.createElement('div');
   panel.id = 'chat-optimizer-dashboard';
+  panel.className = 'minimized';
   panel.innerHTML = `
         <div class="cod-header">
             <div><span class="cod-status-dot" id="cod-dot"></span>Optimizer</div>
-            <button class="cod-btn-close" id="cod-btn-minimize" title="Thu nhỏ">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </button>
+            <span style="cursor:pointer; font-size:18px;" id="cod-close">&times;</span>
         </div>
         <div class="cod-stats">
             <span>Total: <b id="cod-total">0</b></span>
@@ -181,37 +146,31 @@ function injectDashboard() {
     `;
   document.body.appendChild(panel);
 
-  // Tạo HTML cho Nút Icon
-  const fab = document.createElement('button');
-  fab.id = 'cod-fab';
-  fab.title = "Mở bảng điều khiển Optimizer";
-  fab.innerHTML = `
-        <img src="${logo192}" alt="Optimizer" style="width: 48px; height: 48px; border-radius: 50%; object-fit: contain;">
-    `;
-  document.body.appendChild(fab);
+  fab.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isHidden = panel.classList.contains('minimized');
 
-  // ==========================================
-  // SỰ KIỆN ẨN / HIỆN (TOGGLE)
-  // ==========================================
-  const btnMinimize = document.getElementById('cod-btn-minimize');
+    if (isHidden) {
+      const rect = fab.getBoundingClientRect();
 
-  // Khi nhấn nút ">" trong bảng -> Ẩn bảng, Hiện Icon
-  btnMinimize.addEventListener('click', () => {
-    panel.classList.add('minimized');
-    fab.classList.add('visible');
+      panel.style.top = `${rect.bottom + 10}px`;
+      panel.style.right = `${window.innerWidth - rect.right}px`;
+
+      panel.classList.remove('minimized');
+    } else {
+      panel.classList.add('minimized');
+    }
   });
 
-  // Khi nhấn vào Icon tròn -> Hiện bảng, Ẩn Icon
-  fab.addEventListener('click', () => {
-    panel.classList.remove('minimized');
-    fab.classList.remove('visible');
-    // Reset lại scale inline để tránh lỗi hover
-    fab.style.transform = '';
-  });
+  document.getElementById('cod-close').onclick = () => panel.classList.add('minimized');
 
-  // ==========================================
-  // CÁC SỰ KIỆN GỐC
-  // ==========================================
+  dashboardClickListener = (e) => {
+    if (!panel.contains(e.target) && e.target !== fab) {
+      panel.classList.add('minimized');
+    }
+  };
+  document.addEventListener('click', dashboardClickListener);
+
   const elTotal = document.getElementById('cod-total');
   const elVisible = document.getElementById('cod-visible');
   const elHidden = document.getElementById('cod-hidden');
@@ -220,43 +179,49 @@ function injectDashboard() {
   const elValKeep = document.getElementById('cod-val-keep');
 
   document.getElementById('cod-btn-start').addEventListener('click', () => {
-    if (globalThis.HiddingChatGPTSection) globalThis.HiddingChatGPTSection.start();
+    if (globalThis.HidingChatGPTSection) globalThis.HidingChatGPTSection.start();
   });
-
   document.getElementById('cod-btn-stop').addEventListener('click', () => {
-    if (globalThis.HiddingChatGPTSection) globalThis.HiddingChatGPTSection.stop();
+    if (globalThis.HidingChatGPTSection) globalThis.HidingChatGPTSection.stop();
   });
-
   document.getElementById('cod-btn-restore').addEventListener('click', () => {
-    if (globalThis.HiddingChatGPTSection) {
+    if (globalThis.HidingChatGPTSection) {
       const count = globalThis.ExtensionSettings?.restoreCount || 5;
-      globalThis.HiddingChatGPTSection.manualRestore(count);
+      globalThis.HidingChatGPTSection.manualRestore(count);
     }
   });
-
   document.getElementById('cod-btn-hide').addEventListener('click', () => {
-    if (globalThis.HiddingChatGPTSection) {
-      globalThis.HiddingChatGPTSection.manualHide();
-    }
+    if (globalThis.HidingChatGPTSection) globalThis.HidingChatGPTSection.manualHide();
   });
 
-  setInterval(() => {
+  codIntervalId = setInterval(async () => {
     const keep = globalThis.ExtensionSettings?.keepCount || 15;
     const res = globalThis.ExtensionSettings?.restoreCount || 5;
-    elValKeep.innerText = keep;
-    elValRes.innerText = res;
+    if (elValKeep) elValKeep.innerText = keep;
+    if (elValRes) elValRes.innerText = res;
 
-    if (globalThis.HiddingChatGPTSection) {
-      const stats = globalThis.HiddingChatGPTSection.getStats();
-      elTotal.innerText = stats.total;
-      elVisible.innerText = stats.visible;
-      elHidden.innerText = stats.hidden;
+    if (globalThis.HidingChatGPTSection) {
+      const stats = await globalThis.HidingChatGPTSection.getStats();
+      if (elTotal) elTotal.innerText = stats.total;
+      if (elVisible) elVisible.innerText = stats.visible;
+      if (elHidden) elHidden.innerText = stats.hidden;
 
       if (stats.isActive) {
-        elDot.classList.add('active');
+        if (elDot) elDot.classList.add('active');
       } else {
-        elDot.classList.remove('active');
+        if (elDot) elDot.classList.remove('active');
       }
     }
-  }, 500);
+  }, 1000);
+}
+
+export async function observeAndInject() {
+  const observer = new MutationObserver(async () => {
+    const header = document.getElementById('conversation-header-actions');
+    if (header && !document.getElementById('cod-fab')) {
+      await initSettings();
+      injectDashboard(header);
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 }

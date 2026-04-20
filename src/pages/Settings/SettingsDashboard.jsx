@@ -1,5 +1,5 @@
 import CodeIcon from "@mui/icons-material/Code";
-import PestControlIcon from "@mui/icons-material/PestControl";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import {
   Box,
@@ -13,20 +13,25 @@ import { useNavigate } from "react-router-dom";
 import {
   SETTINGS_PREVIEW_CODE,
   SETTINGS_TOGGLE_MENU,
+  SETTINGS_CHAT_OPTIMIZER
 } from "../../constants/route";
 
 const tools = [
   {
     title: "Preview code",
     icon: <CodeIcon sx={{ fontSize: 48, color: "#3f51b5" }} />,
-    onClick: (callback) => callback(SETTINGS_PREVIEW_CODE),
-    key: "confluenceFormatPreElement",
+    onClick: (callback) => callback(SETTINGS_PREVIEW_CODE)
   },
   {
     title: "Toggle settings",
     icon: <ToggleOnIcon sx={{ fontSize: 48, color: "#868590ff" }} />,
-    onClick: (callback) => callback(SETTINGS_TOGGLE_MENU),
+    onClick: (callback) => callback(SETTINGS_TOGGLE_MENU)
   },
+  {
+    title: "Chat optimizer",
+    icon: <AutoAwesomeIcon sx={{ fontSize: 48, color: "#f57c00" }} />,
+    onClick: (callback) => callback(SETTINGS_CHAT_OPTIMIZER)
+  }
 ];
 
 export default function SettingsDashboard() {

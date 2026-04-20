@@ -14,6 +14,7 @@ const SettingsContext = createContext(null);
 const LOAD_DEFAULT_JSON_COLOR = "LOAD_DEFAULT_JSON_COLOR";
 const LOAD_DEFAULT_XML_COLOR = "LOAD_DEFAULT_XML_COLOR";
 const LOAD_DEFAULT_TOGGLE = "LOAD_DEFAULT_TOGGLE";
+const LOAD_CHAT_OPTIMIZER_SETTING = "LOAD_CHAT_OPTIMIZER_SETTING";
 
 export function SettingsProvider({
   children,
@@ -76,6 +77,10 @@ export function SettingsProvider({
     doLoad(LOAD_DEFAULT_TOGGLE);
   }, [doLoad]);
 
+  const loadChatOptimizerSetting = useCallback(() => {
+    doLoad(LOAD_CHAT_OPTIMIZER_SETTING);
+  }, [doLoad]);
+
   // (tuỳ chọn) Lưu ngược về background
   const saveSettings = useCallback(
     (next) => {
@@ -116,7 +121,7 @@ export function SettingsProvider({
         window?.chrome?.runtime?.onMessage?.removeListener(onMessage);
       };
     } catch {
-      return () => {};
+      return () => { };
     }
   }, [updatedEventType]);
 
@@ -130,6 +135,7 @@ export function SettingsProvider({
       loadDefaultJsonColor,
       loadDefaultXmlColor,
       loadDefaultToggleSetting,
+      loadChatOptimizerSetting,
       isLoading,
       error,
       ready: !!settings && !isLoading,
@@ -143,6 +149,7 @@ export function SettingsProvider({
       loadDefaultJsonColor,
       loadDefaultXmlColor,
       loadDefaultToggleSetting,
+      loadChatOptimizerSetting
     ],
   );
 

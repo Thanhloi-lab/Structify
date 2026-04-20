@@ -10,9 +10,9 @@ Promise.all([
     minify: false
   }),
   esbuild.build({
-    entryPoints: ['./src/extension/utils/hiddingChatGPTSection.js'],
+    entryPoints: ['./src/extension/utils/hidingChatGPTSection.js'],
     bundle: true,
-    outfile: 'build/hiddingChatGPTSection.js',
+    outfile: 'build/hidingChatGPTSection.js',
     format: 'iife',
     target: ['chrome114', 'firefox115'],
     minify: false

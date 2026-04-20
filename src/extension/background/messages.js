@@ -12,8 +12,8 @@ const MSG = {
 
   LOAD_DEFAULT_JSON_COLOR: "LOAD_DEFAULT_JSON_COLOR",
   LOAD_DEFAULT_XML_COLOR: "LOAD_DEFAULT_XML_COLOR",
-  LOAD_DEFAULT_DEBUG_SETTING: "LOAD_DEFAULT_DEBUG_SETTING",
   LOAD_DEFAULT_TOGGLE: "LOAD_DEFAULT_TOGGLE",
+  LOAD_CHAT_OPTIMIZER_SETTING: "LOAD_CHAT_OPTIMIZER_SETTING",
 };
 
 function ok(sendResponse, payload) {
@@ -102,7 +102,7 @@ export function initMessages() {
           /* ---------- Load defaults (partial) ---------- */
           case MSG.LOAD_DEFAULT_JSON_COLOR:
           case MSG.LOAD_DEFAULT_XML_COLOR:
-          case MSG.LOAD_DEFAULT_DEBUG_SETTING:
+          case MSG.LOAD_CHAT_OPTIMIZER_SETTING:
           case MSG.LOAD_DEFAULT_TOGGLE: {
             const base = await getEffectiveSettings();
             let next = { ...base };
@@ -111,19 +111,19 @@ export function initMessages() {
               next = { ...next, jsonColors: JSON_COLORS_ARRAY };
             } else if (msg.type === MSG.LOAD_DEFAULT_XML_COLOR) {
               next = { ...next, xmlColors: XML_COLORS_ARRAY };
-            } else if (msg.type === MSG.LOAD_DEFAULT_DEBUG_SETTING) {
-              next = { ...next, pasteToCPUrls: []};
+            } else if (msg.type === MSG.LOAD_CHAT_OPTIMIZER_SETTING) {
+              next = {
+                ...next,
+                keepCount: 15,
+                restoreCount: 5,
+                chatContainerSelector: '#main div.flex.flex-col.text-sm',
+                completelyRemove: true
+              };
             } else if (msg.type === MSG.LOAD_DEFAULT_TOGGLE) {
               next = {
                 ...next,
                 beautifyCode: true,
                 toCSharp: true,
-                confluenceFormatPreElement: true,
-                pasteToCP: true,
-                fillData: true,
-                truliooUtility: true,
-                copyEvidence: true,
-                copyAndCompareVariant: true,
               };
             }
 

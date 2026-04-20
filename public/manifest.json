@@ -53,7 +53,7 @@
         "https://chatgpt.com/*"
       ],
       "js": [
-        "hiddingChatGPTSection.js"
+        "hidingChatGPTSection.js"
       ],
       "run_at": "document_start"
     }

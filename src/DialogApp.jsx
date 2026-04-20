@@ -22,7 +22,14 @@ import { useSettings } from "./contexts/SettingsContext";
 
 export default function DialogApp() {
   const { ready } = useSettings();
-  const { code, convertToCSharp, lang, autoClosePreviewInSec, autoCapture, callerTabId } = useMemo(() => {
+  const {
+    code,
+    convertToCSharp,
+    lang,
+    autoClosePreviewInSec,
+    autoCapture,
+    callerTabId,
+  } = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     return {
       code: decodeURIComponent(params.get("code") || ""),
@@ -58,7 +65,9 @@ export default function DialogApp() {
   useEffect(() => {
     try {
       window.focus();
-    } catch { }
+    } catch (e) {
+      console.error(e);
+    }
     if (document.body) {
       document.body.tabIndex = -1;
       document.body.focus();
@@ -96,7 +105,7 @@ export default function DialogApp() {
         "touchstart",
       ];
       events.forEach((e) =>
-        document.addEventListener(e, start, { passive: true })
+        document.addEventListener(e, start, { passive: true }),
       );
 
       return () => {
@@ -113,11 +122,16 @@ export default function DialogApp() {
     const debugLog = (msg) => {
       console.log(msg);
       if (callerTabId && chrome?.tabs?.sendMessage) {
-        chrome.tabs.sendMessage(Number(callerTabId), { type: "DEBUG_LOG", log: msg }, () => { });
+        chrome.tabs.sendMessage(
+          Number(callerTabId),
+          { type: "DEBUG_LOG", log: msg },
+          () => {},
+        );
       }
     };
 
-    if (autoCapture) debugLog(`Dependencies status -> code: ${!!code}, ready: ${ready}`);
+    if (autoCapture)
+      debugLog(`Dependencies status -> code: ${!!code}, ready: ${ready}`);
 
     if (autoCapture && code && ready) {
       debugLog("All conditions met! Setting 500ms timeout before capturing...");
@@ -133,14 +147,19 @@ export default function DialogApp() {
               closeSelf();
             });
           } else {
-            debugLog("callerTabId missing or chrome.tabs missing. Just closing.");
+            debugLog(
+              "callerTabId missing or chrome.tabs missing. Just closing.",
+            );
             closeSelf();
           }
         };
 
         if (!node) {
           debugLog("ERROR: shotRef.current is empty! Node not found.");
-          respondAndClose({ type: "EVIDENCE_CAPTURED_ERROR", error: "Node not found" });
+          respondAndClose({
+            type: "EVIDENCE_CAPTURED_ERROR",
+            error: "Node not found",
+          });
           return;
         }
 
@@ -154,8 +173,14 @@ export default function DialogApp() {
           debugLog(`Node bounds: width=${rect.width}, height=${rect.height}`);
 
           const MAX_DIM = 16384;
-          const safeRatio = Math.min(2, Math.max(1, MAX_DIM / Math.max(rect.width, rect.height)));
-          const pixelRatio = Math.max(1, Math.min(window.devicePixelRatio || 1, safeRatio));
+          const safeRatio = Math.min(
+            2,
+            Math.max(1, MAX_DIM / Math.max(rect.width, rect.height)),
+          );
+          const pixelRatio = Math.max(
+            1,
+            Math.min(window.devicePixelRatio || 1, safeRatio),
+          );
           debugLog(`Calculated pixelRatio: ${pixelRatio}`);
 
           const dataUrl = await toPng(node, {
@@ -168,7 +193,10 @@ export default function DialogApp() {
           respondAndClose({ type: "EVIDENCE_CAPTURED_BLOB", dataUrl });
         } catch (err) {
           debugLog(`toPng THREW ERROR: ${err}`);
-          respondAndClose({ type: "EVIDENCE_CAPTURED_ERROR", error: String(err) });
+          respondAndClose({
+            type: "EVIDENCE_CAPTURED_ERROR",
+            error: String(err),
+          });
         }
       }, 500); // 500ms should be enough for SyntaxHighlighter to compute
 
@@ -196,11 +224,11 @@ export default function DialogApp() {
       const MAX_DIM = 16384;
       const safeRatio = Math.min(
         2,
-        MAX_DIM / Math.max(rect.width, rect.height)
+        MAX_DIM / Math.max(rect.width, rect.height),
       );
       const pixelRatio = Math.max(
         1,
-        Math.min(window.devicePixelRatio || 1, safeRatio)
+        Math.min(window.devicePixelRatio || 1, safeRatio),
       );
 
       const blob = await toBlob(node, {
@@ -293,8 +321,20 @@ export default function DialogApp() {
         </Toolbar>
       </AppBar>
 
-      <Container sx={{ py: 2, maxWidth: "100% !important", ...(autoCapture ? { minWidth: "1200px" } : {}) }}>
-        <Paper sx={{ ...basePaperSx, ...(autoCapture ? { minWidth: "1200px" } : {}) }} ref={shotRef}>
+      <Container
+        sx={{
+          py: 2,
+          maxWidth: "100% !important",
+          ...(autoCapture ? { minWidth: "1200px" } : {}),
+        }}
+      >
+        <Paper
+          sx={{
+            ...basePaperSx,
+            ...(autoCapture ? { minWidth: "1200px" } : {}),
+          }}
+          ref={shotRef}
+        >
           <CodePreviewBlock
             code={code}
             convertToCSharp={convertToCSharp}

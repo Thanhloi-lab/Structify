@@ -26,7 +26,7 @@ export const DEFAULTS = {
   allowChatGPTOptimize: true,
   keepCount: 15,
   restoreCount: 5,
-  chatContainerSelector: '#main div.flex.flex-col.text-sm.pb-25',
+  chatContainerSelector: '#main div.flex.flex-col.text-sm',
   completelyRemove: true
 };
 
